@@ -1,0 +1,56 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 49585da0f71bec24899d2711616b3a62, type: 3}
+  m_Name: "\u5E73\u539F"
+  m_EditorClassIdentifier: 
+  areaParams:
+    Area1:
+    - Color: {r: 1, g: 0.4051745, b: 0, a: 1}
+      Tag: 0
+      Count: 3
+      Distribution: 20000000240000002800000030000000
+      isQuad: 1
+    - Color: {r: 0.5188679, g: 0.5188679, b: 0.5188679, a: 1}
+      Tag: 1
+      Count: 70
+      Distribution: 03000000030000000300000006000000060000000a0000000c0000000c0000000c0000001400000019000000
+      isQuad: 1
+    - Color: {r: 0.41885513, g: 0, b: 0.735849, a: 1}
+      Tag: 2
+      Count: 7
+      Distribution: 190000001e0000002300000028000000
+      isQuad: 1
+    - Color: {r: 0.8207547, g: 0.8207547, b: 0.8207547, a: 1}
+      Tag: 3
+      Count: 3
+      Distribution: 03000000050000000700000009000000
+      isQuad: 1
+    - Color: {r: 0, g: 0, b: 0, a: 1}
+      Tag: 5
+      Count: 4
+      Distribution: 03000000050000000700000009000000
+      isQuad: 1
+    - Color: {r: 0, g: 0.5377358, b: 0, a: 1}
+      Tag: 6
+      Count: 100
+      Distribution: 0500000005000000050000000a0000000a0000000a0000000f0000000f0000000f0000000f0000001400000014000000140000001400000019000000
+      isQuad: 0
+    - Color: {r: 0, g: 0.18333316, b: 1, a: 1}
+      Tag: 4
+      Count: 10
+      Distribution: 070000000f0000000a000000190000001e000000280000000f000000070000000f000000
+      isQuad: 0
+    - Color: {r: 0, g: 0.36666632, b: 1, a: 1}
+      Tag: 4
+      Count: 15
+      Distribution: 030000000500000006000000080000000a000000
+      isQuad: 1
