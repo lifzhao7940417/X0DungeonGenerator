@@ -9,6 +9,24 @@
 /[Bb]uilds/
 /[Ll]ogs/
 /[Uu]ser[Ss]ettings/
+/Assets/AssetStoreTools*
+.vs/
+/Out/Android/
+/UnityProject/Framework/Library/
+/UnityProject/Framework/Temp/
+/UnityProject/Framework/Temp/UnityLockfile
+*/.DS_Store
+.DS_Store
+
+*Library/
+*Temp/
+DesignDocs/
+*Examples/
+
+StreamingAssets/
+obj/
+UnityProject/Out/
+
 
 # MemoryCaptures can get excessive in size.
 # They also could contain extremely sensitive data
