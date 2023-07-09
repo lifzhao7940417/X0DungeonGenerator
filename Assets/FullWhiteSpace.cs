@@ -58,7 +58,7 @@ public class FullWhiteSpace : MonoBehaviour
         }
     }
 
-    [Button("ShowAllRes")]
+    [Button("显示所有子物体")]
     public void ShowAll()
     {
         for (int j = 0; j < this.transform.childCount; j++)
@@ -66,7 +66,6 @@ public class FullWhiteSpace : MonoBehaviour
             var thisChild = this.transform.GetChild(j);
             thisChild.gameObject.SetActive(true);
         }
-
     }
 
 

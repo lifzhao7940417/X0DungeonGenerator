@@ -37,6 +37,8 @@ public class AdjustTools : MonoBehaviour
         for (int i = 0; i < ItemsList.Count; i++)
         {
             var trans = ItemsList[i].transform;
+
+
             //trans.localRotation = Quaternion.Euler(objRotation);
             trans.localPosition = new Vector3(trans.localPosition.x, objPosY, trans.localPosition.z);
             trans.localScale = Vector3.one * scale;

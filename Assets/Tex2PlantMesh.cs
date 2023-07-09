@@ -2,167 +2,36 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using Sirenix.OdinInspector;
-using System;
-using static UnityEditor.PlayerSettings;
-using System.Reflection;
-using System.Linq;
-using TMPro;
-using static UnityEngine.GraphicsBuffer;
+using static Tex2PlantMesh;
 
-public class Tex2PlantMesh : MonoBehaviour
+public enum samplerTexChannel { R, G, B, A }
+
+[System.Serializable]
+public class PlantFenceLayer
 {
-    private Color[] grey2ScaleIndex;
+    [ReadOnly]
+    [LabelText("围栏层-网格高度、缩放、朝向")]
+    public Vector3 gridParam=new Vector3(0,45,33);
+    [LabelText("围栏层--生成物预制体")]
+    public GameObject testPlantExample;
+    [LabelText("围栏层--植被密度、尺寸、材质Index、材质Clip")]
+    public Vector4 fenceParam =new Vector4(32,0.01f,0,0.45f);
+    [LabelText("围栏层--植被采样通道")]
+    public samplerTexChannel samplerTexChannel;
+    [LabelText("围栏层--植被分布图")]
+    public Texture2D texFence;
+    [LabelText("围栏层--植被随机位置")]
+    [Range(0,1)]
+    public float RangePos=1;
+    [LabelText("围栏层--植被Root")]
+    public Transform trans;
+    [ReadOnly]
+    public List<GameObject> fencObj=new List<GameObject>();
 
     private Vector3 startPos = new Vector3(0, 0, 0);
+    private Vector3[] pos;
     private float girdsize;
     private float transSacle;
-
-    private Vector3[] pos;
-    private Color[] color2TreeIndex;
-
-    [LabelText("围栏图，Size和Grid保持一致")]
-    public Texture2D DynamicTex;
-    [LabelText("Noise图，获取对应颜色的树")]
-    public Texture2D NoiseTex;
-    [LabelText("Gird尺寸")]
-    public int targetGrid = 32;
-    [LabelText("Gizmo颜色")]
-    public Color gizmoCol = Color.white;
-
-    public GameObject testPlantExample;
-
-    [Button("生成位置上的颜色点")]
-    private void InitData()
-    {
-        transSacle = this.transform.localScale.x*10;
-        GetPixel();
-        CheckPos();
-    }
-
-
-    private bool lastflag = false;
-    [Button("显示原本Mask范围")]
-    private void RenderFloor()
-    {
-        lastflag = !lastflag;
-        var render = this.transform.GetComponent<Renderer>();
-        if (render)
-            render.enabled = lastflag;
-    }
-
-
-    [ReadOnly]
-    [LabelText("Fence群落")]
-    public List<GameObject> testPlantExampleList = new List<GameObject>();
-    [LabelText("Fence群落-PosY")][Range(-3, 3)]
-    public float testPlantY = 1;
-    [LabelText("Fence群落-Rotation")]
-    public Vector3 testPlantR = new Vector3(33.33f, 0, 0);
-    [LabelText("Fence群落-ScaleIntensity")]
-    [Range(0, 5)]
-    public float testPlantScale = 1;
-    [LabelText("Fence群落-ScaleMinLimit-防止<0的值缩放后也出现了")]
-    [Range(0,01)]
-    [ReadOnly]
-    public float scaleindexScaleMinLimit = 0.0f;
-    [LabelText("Fence群落-ScaleRampMin")]
-    public float scaleindexRampMin = 0;
-    [LabelText("Fence群落-ScaleRampMax")]
-    public float scaleindexRampMax = 1;
-
-    [Button("根据围栏ScaleIndex生成贴片模型")]
-    private void CreatItemWithData()
-    {
-        for (int i = 0; i < testPlantExampleList.Count; i++)
-        {
-            var obj = testPlantExampleList[i];
-            GameObject.DestroyImmediate(obj);
-        }
-
-        testPlantExampleList = new List<GameObject>();
-
-        for (int i = 0; i < color2TreeIndex.Length; i++)
-        {
-            if (testPlantExample)
-            {
-                var target = GameObject.Instantiate(testPlantExample);
-                target.transform.localRotation = Quaternion.Euler(testPlantR);
-                target.transform.position = pos[i];
-                target.transform.SetParent(this.transform);
-                testPlantExampleList.Add(target);
-            }
-        }
-
-        Adjust();
-    }
-
-    private void OnValidate()
-    {
-        InitData();
-        Adjust();
-    }
-
-    int GetIndexFromGreyAndColorValue(float inScale,float inIntensity )
-    {
-        var valuePartIndex = UnityEngine.Random.Range(0, 5);
-        var valueScaleIndex = 0;
-
-
-        if (inScale < 0.25f* inIntensity)
-            valueScaleIndex = 1;
-        else if (inScale <= 0.5f * inIntensity)
-            valueScaleIndex = 6;
-        else if (inScale <= 0.75f * inIntensity)
-            valueScaleIndex = 11;
-        else
-            valueScaleIndex = 16;
-
-
-        return valuePartIndex+ valueScaleIndex;
-    }
-
-    private void Adjust()
-    {
-        MaterialPropertyBlock props = new MaterialPropertyBlock();
-
-        for (int i = 0; i < testPlantExampleList.Count; i++)
-        {
-            var colorindex = color2TreeIndex[i];
-            var scaleIndex = color2TreeIndex[i].a;
-
-            if(scaleIndex > scaleindexScaleMinLimit)
-                scaleIndex = Mathf.SmoothStep(scaleindexRampMin, scaleindexRampMax, scaleIndex);
-
-            var target = testPlantExampleList[i];
-            target.transform.localScale = Vector3.one * testPlantScale * scaleIndex;
-            target.transform.localPosition = new Vector3(target.transform.localPosition.x, 0 + testPlantY, target.transform.localPosition.z);
-
-            //scale系数，分为4个分段，对应贴图4行，该系数由灰度值（0-1）平均分段而来, scale 系数只会是（1，2，3，4）=>(1,6,11,16,)，如何贴图中越往上植物越大
-            //群落分布系数，分为5个分段，对应贴图5列，该系数由彩色值（0-255）平均分段而来 该系数只会出现（0，1，2，3，4）
-            //两种系数叠加最后成为总系数：scale系数+群落分布系数。该值取值范围【1，20】
-
-            int Index = GetIndexFromGreyAndColorValue(scaleIndex, testPlantScale);
-            float zoffsetStep = 0.001f;
-            float zoffset = ((i % 32) - (int)(targetGrid * 0.5f)) * zoffsetStep;
-
-            //props.SetColor("_BaseColor", colorindex);
-            props.SetInt("_TexIndex", Index);
-            props.SetFloat("_ZOffset", zoffset);
-
-            testPlantExampleList[i].GetComponent<Renderer>().SetPropertyBlock(props);
-        }
-    }
-
-    private void GetPixel()
-    {
-        color2TreeIndex = NoiseTex.GetPixels();
-        grey2ScaleIndex = DynamicTex.GetPixels();
-
-        for (int i = 0; i < color2TreeIndex.Length; i++)
-        {
-            color2TreeIndex[i].a =1- grey2ScaleIndex[i].r;
-        }
-    }
 
     public static void Vector3Rotate(ref Vector3 source, Vector3 axis, float angle)
     {
@@ -170,9 +39,117 @@ public class Tex2PlantMesh : MonoBehaviour
         source = q * source;
     }
 
-    private void CheckPos()
+    public Vector3 RandomPos(Vector3 inPos)
     {
-        pos = new Vector3[targetGrid* targetGrid];
+        Vector2 random = Random.insideUnitCircle;
+        inPos.x += random.x* RangePos;
+        inPos.z += random.y* RangePos;
+        return inPos;
+    }
+
+    private RaycastHit hit;
+    Color GetColorBySelection(Vector3 startPos, Vector3 forward)
+    {
+        Color color = Color.black;
+        if (Physics.Raycast(startPos, forward, out hit))
+        {
+            Renderer rend = hit.transform.GetComponent<Renderer>();
+            MeshCollider meshCollider = hit.collider as MeshCollider;
+
+            if (rend == null || rend.sharedMaterial == null || rend.sharedMaterial.mainTexture == null || meshCollider == null)
+                return Color.black;
+
+            Texture2D tex = rend.sharedMaterial.mainTexture as Texture2D;
+            Vector2 pixelUV = hit.textureCoord;
+            pixelUV.x *= tex.width;
+            pixelUV.y *= tex.height;
+
+            color = tex.GetPixel((int)pixelUV.x, (int)pixelUV.y);
+        }
+        return color;
+    }
+
+    [GUIColor(0, 1, 0, 1)]
+    [Button("刷新模型")]
+    public void FreshObj()
+    {
+        MaterialPropertyBlock props = new MaterialPropertyBlock();
+        for (int i = 0; i < fencObj.Count; i++)
+        {
+            var startPos = fencObj[i].transform.position + Vector3.up;
+            var dir = Vector3.down;
+            var scaleGreyValue = GetColorBySelection(startPos, dir);//从贴图上可以分出具体的灰度
+            var index = (int)fenceParam.z;
+
+            int TexIndex = index + UnityEngine.Random.Range(0, 4);
+            float alphaClip = fenceParam.w;
+            float scaleTrans = fenceParam.y;
+            var name = "Fence";
+
+            switch (samplerTexChannel)
+            {
+                case samplerTexChannel.R:
+                    name += "_R";
+                    if (scaleGreyValue.r < 1)
+                        scaleTrans = 0;
+                    scaleGreyValue = new Color(scaleGreyValue.r, scaleGreyValue.r, scaleGreyValue.r, 1);
+
+
+                    name += "_" + scaleGreyValue.r.ToString();
+                    break;
+                case samplerTexChannel.G:
+                    name += "_G";
+                    if (scaleGreyValue.g < 1)
+                        scaleTrans = 0;
+                    scaleGreyValue = new Color(scaleGreyValue.g, scaleGreyValue.g, scaleGreyValue.g, 1);
+
+
+                    name += "_" + scaleGreyValue.g.ToString();
+                    break;
+                case samplerTexChannel.B:
+                    name += "_B";
+                    if (scaleGreyValue.b < 1)
+                        scaleTrans = 0;
+                    scaleGreyValue = new Color(scaleGreyValue.b, scaleGreyValue.b, scaleGreyValue.b, 1);
+
+
+                    name += "_" + scaleGreyValue.b.ToString();
+                    break;
+                case samplerTexChannel.A:
+                    name += "_A";
+                    if (scaleGreyValue.a < 1)
+                        scaleTrans = 0;
+                    scaleGreyValue = new Color(scaleGreyValue.a, scaleGreyValue.a, scaleGreyValue.a, 1);
+                    name += "_" + scaleGreyValue.a.ToString();
+                    break;
+            }
+
+
+            int targetGrid = (int)fenceParam.x;
+            float zoffsetStep = 0.001f;
+            float zoffset = ((i % targetGrid) - (int)(targetGrid * 0.5f)) * zoffsetStep;
+
+            props.SetColor("_BaseColor", scaleGreyValue);
+            props.SetInt("_TexIndex", TexIndex);
+            props.SetFloat("_ZOffset", zoffset);
+            props.SetFloat("_AlphaClip", alphaClip);
+
+            fencObj[i].GetComponent<Renderer>().SetPropertyBlock(props);
+
+            var target = fencObj[i];
+
+            target.name = name;
+            target.transform.localScale = Vector3.one * scaleTrans;
+            target.transform.localPosition = RandomPos(new Vector3(target.transform.localPosition.x, 0 + gridParam.x, target.transform.localPosition.z));
+        }
+    }
+
+    [Button("生成模型")]
+    public void Generation()
+    {
+        transSacle = gridParam.y* 10;
+        int targetGrid = (int)fenceParam.x;
+        pos = new Vector3[targetGrid * targetGrid];
 
         startPos.x = -transSacle / 4;// + targetGrid * 0.1f;
         startPos.z = -transSacle / 4; //+ targetGrid * 0.1f;
@@ -184,7 +161,7 @@ public class Tex2PlantMesh : MonoBehaviour
             for (int j = 0; j < targetGrid; j++)
             {
                 int index = i * targetGrid + j;
-                
+
                 var addPos = new Vector3();
                 addPos.x = startPos.x + girdsize * (i + 0.5f);
                 addPos.z = startPos.z + girdsize * (j + 0.5f);
@@ -198,56 +175,106 @@ public class Tex2PlantMesh : MonoBehaviour
                 pos[index] = finallPos;
             }
         }
-    }
 
-
-    public enum GizmoColorTips
-    {
-        WalkableOrMask,
-        LookUpColorID,
-        ScaleLevel,
-        ColorIDAndScaleLevel,
-        Closed,
-    }
-
-    public GizmoColorTips gizmoColorType;
-
-    private void OnDrawGizmos()
-    {
-        if (gizmoColorType == GizmoColorTips.Closed)
-            return;
-
-        for (int i = 0; i < pos.Length; i++)
+        //删除旧资产
+        for (int i = 0; i < fencObj.Count; i++)
         {
-            Color color= Color.white;
-            switch (gizmoColorType)
+            var obj = fencObj[i];
+            GameObject.DestroyImmediate(obj);
+        }
+
+
+        fencObj = new List<GameObject>();
+
+        //生成网格点上的物体
+        for (int i = 0; i < targetGrid * targetGrid; i++)
+        {
+            if (testPlantExample)
             {
-                case GizmoColorTips.LookUpColorID:
-                    color = color2TreeIndex[i];
-                    Gizmos.color =  new Color(color.r, color.g, color.b, 1);
-                    break;
-                case GizmoColorTips.ColorIDAndScaleLevel:
-                    color = color2TreeIndex[i];
-                    Gizmos.color = color.a * new Color(color.r, color.g, color.b, 1);
-                    break;
-                case GizmoColorTips.ScaleLevel:
-                    color = color2TreeIndex[i];
-                    Gizmos.color = new Color(color.a, color.a, color.a, 1);
-                    break;
-                case GizmoColorTips.WalkableOrMask:
-                    color = color2TreeIndex[i];
-                    Gizmos.color = new Color(1-color.a, 1 - color.a, 1 - color.a, 1);
-                    break;
-                case GizmoColorTips.Closed:
-                    color = color2TreeIndex[i];
-                    Gizmos.color = new Color(1 - color.a, 1 - color.a, 1 - color.a, 0);
-                    break;
-                default:
-                    color = color2TreeIndex[i];
-                    Gizmos.color = new Color(1 - color.a, 1 - color.a, 1 - color.a, 1);
-                    break;
+                var target = GameObject.Instantiate(testPlantExample);
+                target.transform.localRotation = Quaternion.Euler(new Vector3(gridParam.z, 0,0));
+                target.transform.position = pos[i];
+                target.transform.SetParent(trans);
+                fencObj.Add(target);
             }
-            Gizmos.DrawSphere(pos[i], girdsize * 0.5f);
+        }
+
+        FreshObj();
+
+        List<GameObject> temp = new List<GameObject>();
+        for (int i = 0; i < fencObj.Count; i++)
+        {
+            var target = fencObj[i];
+            if (target.transform.localScale == Vector3.zero)
+            {
+                temp.Add(target.gameObject);
+            }
+        }
+
+        for (int i = 0; i < temp.Count; i++)
+        {
+            fencObj.Remove(temp[i]);
+            var obj = temp[i];
+            GameObject.DestroyImmediate(obj);
+        }
+    }
+
+    public void Clear()
+    {
+        fencObj=new List<GameObject>();
+    }
+}
+
+public class Tex2PlantMesh : MonoBehaviour
+{
+    public List<PlantFenceLayer> PlantFenceDataArray = new List<PlantFenceLayer>();
+
+    private void OnEnable()
+    {
+        FreshAll();
+    }
+
+    private bool lastflag = true;
+    [Button("辅助：隐藏/显示Fence图")]
+    private void RenderFloor()
+    {
+        lastflag = !lastflag;
+        var render = this.transform.GetComponent<Renderer>();
+        if (render)
+            render.enabled = lastflag;
+    }
+    [Button("刷新所有层的植被样式")]
+    [GUIColor(0,1,0,1)]
+    private void FreshAll()
+    {
+        for (int i = 0; i < PlantFenceDataArray.Count; i++)
+        {
+            PlantFenceDataArray[i].FreshObj();
+        }
+    }
+    [Button("创建所有层的植被预制体")]
+    [GUIColor(0, 1, 1, 1)]
+    private void GeneraAll()
+    {
+        for (int i = 0; i < PlantFenceDataArray.Count; i++)
+        {
+            PlantFenceDataArray[i].Generation();
+        }
+    }
+
+    [Button("删除所有层植被预制体")]
+    [GUIColor(1, 0, 0, 1)]
+    private void DeleAll()
+    {
+        for (int i = 0; i < PlantFenceDataArray.Count; i++)
+        {
+            PlantFenceDataArray[i].Clear();
+        }
+
+        for (int i = 0; i < this.transform.childCount; i++)
+        {
+            var gameobject = this.transform.GetChild(0).gameObject;
+            GameObject.DestroyImmediate(gameobject);
         }
     }
 }

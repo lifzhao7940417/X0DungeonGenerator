@@ -52,10 +52,10 @@ Shader "X0/Item/2D"
             UNITY_INSTANCING_BUFFER_START(Props)
                 UNITY_DEFINE_INSTANCED_PROP(float4, _BaseColor)
                 UNITY_DEFINE_INSTANCED_PROP(int, _TexIndex)
+                UNITY_DEFINE_INSTANCED_PROP(float, _AlphaClip)
                 UNITY_DEFINE_INSTANCED_PROP(float, _ZOffset)
             UNITY_INSTANCING_BUFFER_END(Props)
 
-            float _AlphaClip;
             int _TexGroup;
             float4 _TexRowColumn;
 
@@ -87,12 +87,13 @@ Shader "X0/Item/2D"
                 TRANSFER_SHADOW(o);
                 return o;
             }
+
             half2 GetUV(half2 baseuv, half index, half inRow, half inColumn, half2 inUVOffset)
             {
                 half2 uv = baseuv.xy / half2(inRow, inColumn) + half2(inUVOffset.x, inUVOffset.y);
 
-                float Column = fmod((index) / inColumn, inColumn) - floor((index) / inColumn);
                 float Row = floor((index) / inRow) / inRow;
+                float Column = fmod(index / inColumn, inColumn) - floor((index) / inColumn);
 
                 uv = uv + half2(Row, Column);
                 return uv;
@@ -111,7 +112,8 @@ Shader "X0/Item/2D"
                 half2 uv = GetUvFormIndex(i.uv,texindex, _TexRowColumn.x, _TexRowColumn.y);
                 fixed4 col = tex2D(_MainTex, uv);
                 half Alpha = max(max(col.r, col.g), col.b);
-                clip(Alpha - _AlphaClip);
+                float clipValue = UNITY_ACCESS_INSTANCED_PROP(Props, _AlphaClip); ;
+                clip(Alpha - clipValue);
 
                 UNITY_LIGHT_ATTENUATION(atten, i, worldPos);
 
@@ -181,11 +183,9 @@ Shader "X0/Item/2D"
                 return o;
             }
 
-            //sampler2D _MainTex;
-            fixed _AlphaClip;
-            fixed4 _BaseColor;
             UNITY_INSTANCING_BUFFER_START(Props)
                 UNITY_DEFINE_INSTANCED_PROP(int, _TexIndex)
+                UNITY_DEFINE_INSTANCED_PROP(float, _AlphaClip)
             UNITY_INSTANCING_BUFFER_END(Props)
 
             float4 frag(v2f i) : SV_Target
@@ -196,7 +196,8 @@ Shader "X0/Item/2D"
                  half2 uv = GetUvFormIndex(i.uv, texindex, _TexRowColumn.x, _TexRowColumn.y);
                 fixed4 texcol = tex2D(_MainTex, uv);
                 float alpha  = max(max(texcol.r, texcol.g), texcol.b);
-                clip(alpha - _AlphaClip);
+                float clipValue = UNITY_ACCESS_INSTANCED_PROP(Props, _AlphaClip); ;
+                clip(alpha - clipValue);
 
                 //soft shadow(fade shadow):半透明物体的阴影,会加剧阴影的闪烁
                 //float dither = tex3D(_DitherMaskLOD, float3((i.pos.xy) * 0.5, alpha )).a;
