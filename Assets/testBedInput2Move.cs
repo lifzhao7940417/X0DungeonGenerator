@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.EventSystems;
 
+
 public class testBedInput2Move : MonoBehaviour
 {
     public float moveSpeed = 10;

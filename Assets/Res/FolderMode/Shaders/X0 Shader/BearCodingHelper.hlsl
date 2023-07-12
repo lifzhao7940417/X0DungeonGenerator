@@ -164,6 +164,68 @@ half2 GetUvFormIndex(float2 inUV, int inIndex, float inRow, float inColumn)
 	return inUV * half2(xeach, yeach) + half2(uvx, uvy);
 }
 
+half2 GetUV(half2 baseuv, half index, half inRow, half inColumn, half2 inUVOffset)
+{
+	half2 uv = baseuv.xy / half2(inRow, inColumn) + half2(inUVOffset.x, inUVOffset.y);
+
+	float Row = floor((index) / inRow) / inRow;
+	float Column = fmod(index / inColumn, inColumn) - floor((index) / inColumn);
+
+	uv = uv + half2(Row, Column);
+	return uv;
+}
+
+half2 GetUVOMG(half2 baseuv, half index)
+{
+	half2 tilling = half2(0.2, 0.25);
+	if (index == 1)
+		return baseuv * tilling + half2(0, 0);
+	else if (index == 2)
+		return baseuv * tilling + half2(0.2, 0);
+	else if (index == 3)
+		return baseuv * tilling + half2(0.4, 0);
+	else if (index == 4)
+		return baseuv * tilling + half2(0.6, 0);
+	else if (index == 5)
+		return baseuv * tilling + half2(0.8, 0);
+	else if (index == 6)
+		return baseuv * tilling + half2(0, 0.25);
+	else if (index == 7)
+		return baseuv * tilling + half2(0.2, 0.25);
+	else if (index == 8)
+		return baseuv * tilling + half2(0.4, 0.25);
+	else if (index == 9)
+		return baseuv * tilling + half2(0.6, 0.25);
+	else if (index == 10)
+		return baseuv * tilling + half2(0.8, 0.25);
+	else if (index == 11)
+		return baseuv * tilling + half2(0, 0.5);
+	else if (index == 12)
+		return baseuv * tilling + half2(0.2, 0.5);
+	else if (index == 13)
+		return baseuv * tilling + half2(0.4, 0.5);
+	else if (index == 14)
+		return baseuv * tilling + half2(0.6, 0.5);
+	else if (index == 15)
+		return baseuv * tilling + half2(0.8, 0.5);
+	else if (index == 16)
+		return baseuv * tilling + half2(0, 0.75);
+	else if (index == 17)
+		return baseuv * tilling + half2(0.2, 0.75);
+	else if (index == 18)
+		return baseuv * tilling + half2(0.4, 0.75);
+	else if (index == 19)
+		return baseuv * tilling + half2(0.6, 0.75);
+	else  if (index == 20)
+		return baseuv * tilling + half2(0.8, 0.75);
+	else if (index < 1)
+		return baseuv * tilling + half2(0, 0);
+	else if (index > 20)
+		return baseuv * tilling + half2(0.8, 0.75);
+	else
+		return baseuv;
+}
+
 half3 WorldCameraPos()
 {
 	return _WorldSpaceCameraPos.xyz;

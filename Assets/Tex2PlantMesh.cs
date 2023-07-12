@@ -18,8 +18,10 @@ public class PlantFenceLayer
     public Vector4 fenceParam =new Vector4(32,0.01f,0,0.45f);
     [LabelText("围栏层--植被采样通道")]
     public samplerTexChannel samplerTexChannel;
-    [LabelText("围栏层--植被分布图")]
-    public Texture2D texFence;
+    //[LabelText("围栏层--植被分布图")]
+    //public Texture2D texFence;
+    //[LabelText("围栏层--植被集群图")]
+    //public Texture2D texFenceIndex;
     [LabelText("围栏层--植被随机位置")]
     [Range(0,1)]
     public float RangePos=1;
@@ -48,10 +50,12 @@ public class PlantFenceLayer
     }
 
     private RaycastHit hit;
+    private int LayerMask1;
     Color GetColorBySelection(Vector3 startPos, Vector3 forward)
     {
+        LayerMask1 = 1 << LayerMask.NameToLayer("FenceIndexGeneration");
         Color color = Color.black;
-        if (Physics.Raycast(startPos, forward, out hit))
+        if (Physics.Raycast(startPos, forward, out hit,10, LayerMask1))
         {
             Renderer rend = hit.transform.GetComponent<Renderer>();
             MeshCollider meshCollider = hit.collider as MeshCollider;
@@ -69,6 +73,95 @@ public class PlantFenceLayer
         return color;
     }
 
+    public (Color,int) NoiseColor(Color inColor)
+    {
+        Color newC = inColor;
+        int index = 0;
+
+        float R = Mathf.SmoothStep(0, 1, inColor.r);
+        float G = Mathf.SmoothStep(0, 1, inColor.g);
+        float B = Mathf.SmoothStep(0, 1, inColor.b);
+
+        if (R == G && G == B)
+        {
+            newC = new Color(1, 1, 1, 1);// _F.rgb;
+        }
+        else
+        {
+            if (R > G)
+            {
+                if (G > B)
+                {
+                    newC = new Color(0.15F, 0.15F, 0.15F, 1);//  col.rgb = _A.rgb;
+                    index = 0;
+                }
+                else
+                {
+                    newC = new Color(0.3F, 0.3F, 0.3F, 1);//  col.rgb = _B.rgb;
+                    index = 1;
+                }
+            }
+            else if (G > B)
+            {
+                if (B > R)
+                {
+                    newC = new Color(0.45F, 0.45F, 0.45F, 1);// col.rgb = _C.rgb;
+                    index = 2;
+                }
+                else
+                {
+                    newC = new Color(0.6F, 0.6F, 0.6F, 1);//  col.rgb = _D.rgb;
+                    index = 3;
+                }
+            }
+            else if (B > R)
+            {
+                if (G > R)
+                {
+                    newC = new Color(0.75F, 0.75F, 0.75F, 1);//  col.rgb = _E.rgb;
+                    index = 4;
+                }
+                else
+                {
+                    newC = new Color(1, 1, 1, 1);//col.rgb = _F.rgb;
+                }
+            }
+        }
+
+        return (newC, index);
+    }
+
+
+    private RaycastHit hit2;
+    private int LayerMask2;
+    public int GetFencePartFromNoise(Vector3 startPos, Vector3 forward)
+    {
+        int addIndex = 0;
+        Color color = Color.black;
+        LayerMask2 = 1 << LayerMask.NameToLayer("FenceIndexPartNoise");
+        if (Physics.Raycast(startPos, forward, out hit2,10, LayerMask2))
+        {
+            //Debug.LogError(hit2.collider.gameObject.name);
+
+            Renderer rend = hit2.transform.GetComponent<Renderer>();
+            MeshCollider meshCollider = hit2.collider as MeshCollider;
+
+            if (rend == null || rend.sharedMaterial == null || rend.sharedMaterial.mainTexture == null || meshCollider == null)
+                return 0;
+
+            Texture2D tex = rend.sharedMaterial.mainTexture as Texture2D;
+            Vector2 pixelUV = hit2.textureCoord;
+            pixelUV.x *= tex.width;
+            pixelUV.y *= tex.height;
+
+            color = tex.GetPixel((int)pixelUV.x, (int)pixelUV.y);
+
+            addIndex = NoiseColor(color).Item2;
+        }
+
+        return addIndex;
+    }
+
     [GUIColor(0, 1, 0, 1)]
     [Button("刷新模型")]
     public void FreshObj()
@@ -79,9 +172,9 @@ public class PlantFenceLayer
             var startPos = fencObj[i].transform.position + Vector3.up;
             var dir = Vector3.down;
             var scaleGreyValue = GetColorBySelection(startPos, dir);//从贴图上可以分出具体的灰度
-            var index = (int)fenceParam.z;
+            var index = (int)fenceParam.z;//index初始值
 
-            int TexIndex = index + UnityEngine.Random.Range(0, 4);
+            int TexIndex = index + GetFencePartFromNoise(startPos, dir); //UnityEngine.Random.Range(0, 5);
             float alphaClip = fenceParam.w;
             float scaleTrans = fenceParam.y;
             var name = "Fence";

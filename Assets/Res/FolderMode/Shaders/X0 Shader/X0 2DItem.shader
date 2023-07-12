@@ -88,16 +88,7 @@ Shader "X0/Item/2D"
                 return o;
             }
 
-            half2 GetUV(half2 baseuv, half index, half inRow, half inColumn, half2 inUVOffset)
-            {
-                half2 uv = baseuv.xy / half2(inRow, inColumn) + half2(inUVOffset.x, inUVOffset.y);
 
-                float Row = floor((index) / inRow) / inRow;
-                float Column = fmod(index / inColumn, inColumn) - floor((index) / inColumn);
-
-                uv = uv + half2(Row, Column);
-                return uv;
-            }
 
             fixed4 frag(v2f i) : SV_Target
             {
@@ -109,7 +100,8 @@ Shader "X0/Item/2D"
 
                 int texindex = UNITY_ACCESS_INSTANCED_PROP(Props, _TexIndex);
 
-                half2 uv = GetUvFormIndex(i.uv,texindex, _TexRowColumn.x, _TexRowColumn.y);
+                half2 uv = GetUVOMG(i.uv, texindex);
+                    //GetUvFormIndex(i.uv,texindex, _TexRowColumn.x, _TexRowColumn.y);
                 fixed4 col = tex2D(_MainTex, uv);
                 half Alpha = max(max(col.r, col.g), col.b);
                 float clipValue = UNITY_ACCESS_INSTANCED_PROP(Props, _AlphaClip); ;
@@ -159,16 +151,6 @@ Shader "X0/Item/2D"
             float4 _TexRowColumn;
             //sampler3D _DitherMaskLOD;//Unity内置的三维抖动纹理
 
-            half2 GetUV(half2 baseuv, half index, half inRow, half inColumn, half2 inUVOffset)
-            {
-                half2 uv = baseuv.xy / half2(inRow, inColumn) + half2(inUVOffset.x, inUVOffset.y);
-
-                float Column = fmod((index) / inColumn, inColumn) - floor((index) / inColumn);
-                float Row = floor((index) / inRow) / inRow;
-
-                uv = uv + half2(Row,Column );
-                return uv;
-            }
 
             v2f vert(a2v v)
             {
@@ -193,7 +175,8 @@ Shader "X0/Item/2D"
                 UNITY_SETUP_INSTANCE_ID(i);
                 int texindex = UNITY_ACCESS_INSTANCED_PROP(Props, _TexIndex);
                 //hard shadow:镂空物体的阴影
-                 half2 uv = GetUvFormIndex(i.uv, texindex, _TexRowColumn.x, _TexRowColumn.y);
+                half2 uv = GetUVOMG(i.uv, texindex);
+                     //GetUvFormIndex(i.uv, texindex, _TexRowColumn.x, _TexRowColumn.y);
                 fixed4 texcol = tex2D(_MainTex, uv);
                 float alpha  = max(max(texcol.r, texcol.g), texcol.b);
                 float clipValue = UNITY_ACCESS_INSTANCED_PROP(Props, _AlphaClip); ;
