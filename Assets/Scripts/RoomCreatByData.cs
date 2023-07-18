@@ -10,7 +10,7 @@ public class RoomInfo
     public Vector3 pos;
     public Vector3 size;
     public Color color;
-    public string prefab;
+    public string prefabName;
     public Vector3 prefabScale;
     public Vector3 prefabRot;
 }
@@ -69,13 +69,14 @@ public class RoomCreatByData : MonoBehaviour
         {
             GrssRoot = new GameObject("@Grass");
             GrssRoot.transform.SetParent(Root.transform);
-            var tool = GrssRoot.AddComponent<AdjustTools>();
+            GrssRoot.AddComponent<AdjustTools>();
         }
 
         if (ItemRoot == null)
         {
             ItemRoot = new GameObject("@Items");
             ItemRoot.transform.SetParent(Root.transform);
+            ItemRoot.AddComponent<AdjustTools>();
         }
 
         if (InOutRoot == null)
@@ -87,21 +88,20 @@ public class RoomCreatByData : MonoBehaviour
 
     private void CreatRes(TextAsset inTextJson)
     {
-        roomInfos = TextAsset2AttackData(inTextJson);
+        roomInfos = TextAsset2Data(inTextJson);
 
         for (int i = 0; i < roomInfos.Count; i++)
         {
             var info = roomInfos[i];
 
-            info.prefab = "";
+            info.prefabName = "";
             info.prefabScale = Vector3.zero;            
 
             info = GetDataFromInfo(info);
 
-            Debug.LogError(info.prefab.ToString());
-
-            if (info.prefab == "")
+            if (info.prefabName == "")
             {
+                Debug.LogError(info.prefabName.ToString());
                 GameObject room = GameObject.CreatePrimitive(PrimitiveType.Cube);
                 room.name = info.des.Tag.ToString();
                 room.transform.SetParent(GrssRoot.transform);
@@ -111,8 +111,9 @@ public class RoomCreatByData : MonoBehaviour
             }
             else
             {
-                GameObject room = GameObject.Instantiate(Resources.Load(info.prefab)) as GameObject;
-                room.name = info.prefab;
+                Debug.LogError(info.prefabName.ToString());
+                GameObject room = GameObject.Instantiate(Resources.Load(info.prefabName)) as GameObject;
+                room.name = info.prefabName;
 
                 SetParentAndFixData(room, info);
 
@@ -126,11 +127,17 @@ public class RoomCreatByData : MonoBehaviour
                 {
                     room.transform.GetComponent<FullWhiteSpace>().parent = GrssRoot.transform;
                     room.transform.GetComponent<FullWhiteSpace>().CreatRes();
+                    GameObject.DestroyImmediate(room.transform.gameObject);
                 }
             }
         }
     }
 
+    /// <summary>
+    /// 主要是针对Iitem等抽象物件，进行大小区分成不同实际物体，并一一对应，用于之后的生成
+    /// </summary>
+    /// <param name="info"></param>
+    /// <returns></returns>
     private RoomInfo GetDataFromInfo(RoomInfo info)
     {
         if (info.des.Tag == AreaDesTag.Items)
@@ -139,7 +146,7 @@ public class RoomCreatByData : MonoBehaviour
             {
                 if (Use2DRes)
                 {
-                    info.prefab = "i_2002_2D";
+                    info.prefabName = "i_2002_2D";
                     info.prefabScale = Vector3.one * info.size.x;
                 }
             }
@@ -147,61 +154,60 @@ public class RoomCreatByData : MonoBehaviour
             {
                 if (Use2DRes)
                 {
-                    info.prefab = "i_2002_2D";
+                    info.prefabName = "i_2002_2D";
                     info.prefabScale = Vector3.one * info.size.x;
                 }
                 else
                 {
-                    info.prefab = "i_2002";
+                    info.prefabName = "i_2002";
                     info.prefabScale = Vector3.one * info.size.x * 0.2f;
                 }
             }
-            else if (info.size.x == 3)
-            {
-                info.prefab = "f_2002";
-                info.prefabScale = Vector3.one * 3.0f;
-            }
             else if (info.size.x == 6)
             {
-                info.prefab = "i_1003";
+                info.prefabName = "i_1003";
                 info.prefabScale = Vector3.one * 2.5f;
-
+            }
+            else if (info.size.x == 3)
+            {
+                info.prefabName = "f_2002";
+                info.prefabScale = Vector3.one * 3.0f;
             }
         }
 
         if (info.des.Tag == AreaDesTag.Areas)
         {
-            info.prefab = "Areas";
+            info.prefabName = "Areas";
             info.prefabScale = info.size;
         }
 
         if (info.des.Tag == AreaDesTag.人)
         {
-            info.prefab = "npc";
+            info.prefabName = "npc";
             info.prefabScale = Vector3.one;
         }
 
         if (info.des.Tag == AreaDesTag.草)
         {
-            info.prefab = "草";
+            info.prefabName = "草";
             info.prefabScale = info.size;
         }
 
         if (info.des.Tag == AreaDesTag.水)
         {
-            info.prefab = "tb_water_01";
+            info.prefabName = "tb_water_01";
             info.prefabScale = info.size;
         }
 
         if (info.des.Tag == AreaDesTag.Boss)
         {
-            info.prefab = "Boss";
+            info.prefabName = "Boss";
             info.prefabScale = info.size;
         }
 
         if (info.des.Tag == AreaDesTag.穴)
         {
-            info.prefab = "穴";
+            info.prefabName = "穴";
             info.prefabScale = info.size;
         }
 
@@ -231,9 +237,14 @@ public class RoomCreatByData : MonoBehaviour
         return info;
     }
 
+    /// <summary>
+    /// 根据物件名字分组
+    /// </summary>
+    /// <param name="inObj"></param>
+    /// <param name="inInfo"></param>
     private void SetParentAndFixData(GameObject inObj,RoomInfo inInfo)
     {
-        var name = inInfo.prefab;
+        var name = inInfo.prefabName;
 
         if (name.Contains("water"))
         {
@@ -300,7 +311,7 @@ public class RoomCreatByData : MonoBehaviour
 
     }
 
-    static public List<RoomInfo> TextAsset2AttackData(TextAsset AnimJson)
+    static public List<RoomInfo> TextAsset2Data(TextAsset AnimJson)
     {
         List<RoomInfo> roomInfo = new List<RoomInfo>();
         string json = AnimJson.text;

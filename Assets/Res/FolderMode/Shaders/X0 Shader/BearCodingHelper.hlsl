@@ -175,7 +175,59 @@ half2 GetUV(half2 baseuv, half index, half inRow, half inColumn, half2 inUVOffse
 	return uv;
 }
 
-half2 GetUVOMG(half2 baseuv, half index)
+
+half2 GetUVOMG4(half2 baseuv, half index)
+{
+	half2 tilling = half2(0.5, 0.5);
+
+	if (index == 1)
+		return baseuv * tilling + half2(0, 0);
+	else if (index == 2)
+		return baseuv * tilling + half2(0.5, 0);
+	else if (index == 3)
+		return baseuv * tilling + half2(0, 0.5);
+	else if (index == 4)
+		return baseuv * tilling + half2(0.5, 0.5);
+	else if (index < 1)
+		return baseuv * tilling + half2(0, 0);
+	else if (index > 4)
+		return baseuv * tilling + half2(0.5, 0.5);
+	else
+		return baseuv;
+}
+
+
+half2 GetUVOMG9(half2 baseuv, half index)
+{
+	half2 tilling = half2(0.333, 0.333);
+
+	if (index == 1)
+		return baseuv * tilling + half2(0, 0);
+	else if (index == 2)
+		return baseuv * tilling + half2(0.333, 0);
+	else if (index == 3)
+		return baseuv * tilling + half2(0.666, 0);
+	else if (index == 4)
+		return baseuv * tilling + half2(0, 0.333);
+	else if (index == 5)
+		return baseuv * tilling + half2(0.333, 0.333);
+	else if (index == 6)
+		return baseuv * tilling + half2(0.666, 0.333);
+	else if (index == 7)
+		return baseuv * tilling + half2(0, 0.666);
+	else if (index == 8)
+		return baseuv * tilling + half2(0.333, 0.666);
+	else if (index == 9)
+		return baseuv * tilling + half2(0.666, 0.666);
+	else if (index < 1)
+		return baseuv * tilling + half2(0, 0);
+	else if (index > 9)
+		return baseuv * tilling + half2(0.666, 0.666);
+	else
+		return baseuv;
+}
+
+half2 GetUVOMG20(half2 baseuv, half index)
 {
 	half2 tilling = half2(0.2, 0.25);
 	if (index == 1)
@@ -211,7 +263,7 @@ half2 GetUVOMG(half2 baseuv, half index)
 	else if (index == 16)
 		return baseuv * tilling + half2(0, 0.75);
 	else if (index == 17)
-		return baseuv * tilling + half2(0.2, 0.75);
+		return baseuv* tilling + half2(0.2, 0.75);
 	else if (index == 18)
 		return baseuv * tilling + half2(0.4, 0.75);
 	else if (index == 19)

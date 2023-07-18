@@ -19,8 +19,7 @@ public class RoomData2Txt : MonoBehaviour
 
     public void OutPutData2Txt()
     {
-        // @"F:\@BearCoding\HT_2019LTS\UnityProject\HMZY\Assets\Resources\DataAnim";
-        string AbsolutePath = @"F:\@BearCoding\@AllUnityProjects\@Others\DungeonGenerator-master\Assets\Resources\RoomRes";
+        string AbsolutePath = @"F:\@BearCoding\GitProjects\X0Generator\Assets\Resources\RoomRes";
         string txtName = string.Format(@"/{0}.txt", "Test1"); ;
         string path = AbsolutePath + txtName;
         string txtValue = "";

@@ -2,16 +2,14 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using Sirenix.OdinInspector;
-using static Tex2PlantMesh;
+using static UnityEngine.UIElements.UxmlAttributeDescription;
 
 public enum samplerTexChannel { R, G, B, A }
 
 [System.Serializable]
 public class PlantFenceLayer
 {
-    [ReadOnly]
-    [LabelText("围栏层-网格高度、缩放、朝向")]
-    public Vector3 gridParam=new Vector3(0,45,33);
+    public Tex2PlantMesh BaseLeader;
     [LabelText("围栏层--生成物预制体")]
     public GameObject testPlantExample;
     [LabelText("围栏层--植被密度、尺寸、材质Index、材质Clip")]
@@ -23,7 +21,7 @@ public class PlantFenceLayer
     //[LabelText("围栏层--植被集群图")]
     //public Texture2D texFenceIndex;
     [LabelText("围栏层--植被随机位置")]
-    [Range(0,1)]
+    [Range(0,5)]
     public float RangePos=1;
     [LabelText("围栏层--植被Root")]
     public Transform trans;
@@ -141,7 +139,6 @@ public class PlantFenceLayer
         LayerMask2 = 1 << LayerMask.NameToLayer("FenceIndexPartNoise");
         if (Physics.Raycast(startPos, forward, out hit2,10, LayerMask2))
         {
-            //Debug.LogError(hit2.collider.gameObject.name);
 
             Renderer rend = hit2.transform.GetComponent<Renderer>();
             MeshCollider meshCollider = hit2.collider as MeshCollider;
@@ -162,10 +159,16 @@ public class PlantFenceLayer
         return addIndex;
     }
 
+
     [GUIColor(0, 1, 0, 1)]
     [Button("刷新模型")]
     public void FreshObj()
     {
+        if (BaseLeader.gridIDObj != null)
+        {
+            BaseLeader. gridIDObj.transform.localScale = Vector3.one * BaseLeader.gridParam;
+        }
+
         MaterialPropertyBlock props = new MaterialPropertyBlock();
         for (int i = 0; i < fencObj.Count; i++)
         {
@@ -227,20 +230,31 @@ public class PlantFenceLayer
             props.SetFloat("_ZOffset", zoffset);
             props.SetFloat("_AlphaClip", alphaClip);
 
+            if (fencObj[i].GetComponent<UVEvaluation>())
+            {
+                fencObj[i].GetComponent<UVEvaluation>().Index = TexIndex;
+            }
+            else
+            {
+                var uve = fencObj[i].AddComponent<UVEvaluation>();
+                uve.Index = TexIndex;
+            }
+
             fencObj[i].GetComponent<Renderer>().SetPropertyBlock(props);
 
             var target = fencObj[i];
 
             target.name = name;
             target.transform.localScale = Vector3.one * scaleTrans;
-            target.transform.localPosition = RandomPos(new Vector3(target.transform.localPosition.x, 0 + gridParam.x, target.transform.localPosition.z));
+            target.transform.localPosition = RandomPos(new Vector3(target.transform.localPosition.x, 0, target.transform.localPosition.z));
         }
     }
 
     [Button("生成模型")]
     public void Generation()
     {
-        transSacle = gridParam.y* 10;
+        //计算网格位置
+        transSacle = BaseLeader.gridParam * 10;
         int targetGrid = (int)fenceParam.x;
         pos = new Vector3[targetGrid * targetGrid];
 
@@ -255,6 +269,8 @@ public class PlantFenceLayer
             {
                 int index = i * targetGrid + j;
 
+             
+
                 var addPos = new Vector3();
                 addPos.x = startPos.x + girdsize * (i + 0.5f);
                 addPos.z = startPos.z + girdsize * (j + 0.5f);
@@ -265,30 +281,29 @@ public class PlantFenceLayer
                 Vector3Rotate(ref finallPos, Vector3.right, 180);
                 Vector3Rotate(ref finallPos, Vector3.up, 180);
 
-                pos[index] = finallPos;
+                 pos[index] = finallPos;
+
             }
         }
 
         //删除旧资产
-        for (int i = 0; i < fencObj.Count; i++)
-        {
-            var obj = fencObj[i];
-            GameObject.DestroyImmediate(obj);
-        }
-
-
-        fencObj = new List<GameObject>();
+        Clear();
 
         //生成网格点上的物体
         for (int i = 0; i < targetGrid * targetGrid; i++)
         {
-            if (testPlantExample)
+            var tarPos = pos[i];
+
+            if (tarPos.x < 211 && tarPos.z > -202)
             {
-                var target = GameObject.Instantiate(testPlantExample);
-                target.transform.localRotation = Quaternion.Euler(new Vector3(gridParam.z, 0,0));
-                target.transform.position = pos[i];
-                target.transform.SetParent(trans);
-                fencObj.Add(target);
+                if (testPlantExample)
+                {
+                    var target = GameObject.Instantiate(testPlantExample);
+                    target.transform.localRotation = Quaternion.Euler(new Vector3(33.0f, 0, 0));
+                    target.transform.position = pos[i];
+                    target.transform.SetParent(trans);
+                    fencObj.Add(target);
+                }
             }
         }
 
@@ -312,14 +327,30 @@ public class PlantFenceLayer
         }
     }
 
+    [GUIColor(1, 0, 0, 1)]
+    [Button("删除模型")]
     public void Clear()
     {
-        fencObj=new List<GameObject>();
+        while (fencObj.Count>0) 
+        {
+            var go = fencObj[0].gameObject;
+            GameObject.DestroyImmediate(go);
+            fencObj.RemoveAt(0);
+        }
+
+        fencObj = new List<GameObject>();
     }
 }
 
 public class Tex2PlantMesh : MonoBehaviour
 {
+    [ReadOnly]
+    //这里故意写死45时因为距离节奏刚刚好，如果要做小范围的fence，建议图片上区域小一点就可以了
+    [LabelText("围栏层--最大范围（为何写死？看注释）")]
+    public float gridParam = 45;
+    [LabelText("围栏层--脚底遮罩片")]
+    public GameObject gridIDObj;
+
     public List<PlantFenceLayer> PlantFenceDataArray = new List<PlantFenceLayer>();
 
     private void OnEnable()
@@ -327,16 +358,7 @@ public class Tex2PlantMesh : MonoBehaviour
         FreshAll();
     }
 
-    private bool lastflag = true;
-    [Button("辅助：隐藏/显示Fence图")]
-    private void RenderFloor()
-    {
-        lastflag = !lastflag;
-        var render = this.transform.GetComponent<Renderer>();
-        if (render)
-            render.enabled = lastflag;
-    }
-    [Button("刷新所有层的植被样式")]
+    [Button("刷新Fence（All）")]
     [GUIColor(0,1,0,1)]
     private void FreshAll()
     {
@@ -345,8 +367,7 @@ public class Tex2PlantMesh : MonoBehaviour
             PlantFenceDataArray[i].FreshObj();
         }
     }
-    [Button("创建所有层的植被预制体")]
-    [GUIColor(0, 1, 1, 1)]
+    [Button("生成Fence（All）")]
     private void GeneraAll()
     {
         for (int i = 0; i < PlantFenceDataArray.Count; i++)
@@ -355,7 +376,7 @@ public class Tex2PlantMesh : MonoBehaviour
         }
     }
 
-    [Button("删除所有层植被预制体")]
+    [Button("删除Fence（All）")]
     [GUIColor(1, 0, 0, 1)]
     private void DeleAll()
     {
@@ -364,10 +385,11 @@ public class Tex2PlantMesh : MonoBehaviour
             PlantFenceDataArray[i].Clear();
         }
 
-        for (int i = 0; i < this.transform.childCount; i++)
+
+        while (this.transform.childCount > 0)
         {
-            var gameobject = this.transform.GetChild(0).gameObject;
-            GameObject.DestroyImmediate(gameobject);
+            var go = this.transform.GetChild(0).gameObject;
+            GameObject.DestroyImmediate(go);
         }
     }
 }

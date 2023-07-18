@@ -6,8 +6,8 @@ Shader "X0/Item/2D"
         _BaseColor("Color",Color)=(1,1,1,1)
         _MainTex("Texture", 2D) = "white" {}
 
-        _TexRowColumn("TexRowColumn",vector) = (1,1,1,1)
-        _TexIndex("TexIndex",float) = 1
+        _AllCount("AllCount",int) = 2
+        _TexIndex("TexIndex",int) = 1
         _ZOffset("ZOffset",float) = 0
     }
 
@@ -57,7 +57,7 @@ Shader "X0/Item/2D"
             UNITY_INSTANCING_BUFFER_END(Props)
 
             int _TexGroup;
-            float4 _TexRowColumn;
+            int _AllCount;
 
             v2f vert(a2v v)
             {
@@ -99,9 +99,14 @@ Shader "X0/Item/2D"
                 //half3 worldlightdir = WorldLightDir(worldPos);
 
                 int texindex = UNITY_ACCESS_INSTANCED_PROP(Props, _TexIndex);
+                half2 uv = i.uv;
+                if (_AllCount == 20)
+                    uv = GetUVOMG20(i.uv, texindex);
+                else if (_AllCount == 9)
+                    uv = GetUVOMG9(i.uv, texindex);
+                else if (_AllCount == 4)
+                    uv = GetUVOMG4(i.uv, texindex);
 
-                half2 uv = GetUVOMG(i.uv, texindex);
-                    //GetUvFormIndex(i.uv,texindex, _TexRowColumn.x, _TexRowColumn.y);
                 fixed4 col = tex2D(_MainTex, uv);
                 half Alpha = max(max(col.r, col.g), col.b);
                 float clipValue = UNITY_ACCESS_INSTANCED_PROP(Props, _AlphaClip); ;
@@ -148,9 +153,8 @@ Shader "X0/Item/2D"
             };
 
             //float4 _MainTex_ST;
-            float4 _TexRowColumn;
             //sampler3D _DitherMaskLOD;//Unity内置的三维抖动纹理
-
+            int _AllCount;
 
             v2f vert(a2v v)
             {
@@ -175,8 +179,15 @@ Shader "X0/Item/2D"
                 UNITY_SETUP_INSTANCE_ID(i);
                 int texindex = UNITY_ACCESS_INSTANCED_PROP(Props, _TexIndex);
                 //hard shadow:镂空物体的阴影
-                half2 uv = GetUVOMG(i.uv, texindex);
-                     //GetUvFormIndex(i.uv, texindex, _TexRowColumn.x, _TexRowColumn.y);
+                half2 uv = i.uv;
+
+                if(_AllCount==20)
+                    uv = GetUVOMG20(i.uv, texindex);
+                else if(_AllCount ==9)
+                    uv = GetUVOMG9(i.uv, texindex);
+                else if (_AllCount == 4)
+                    uv = GetUVOMG4(i.uv, texindex);
+
                 fixed4 texcol = tex2D(_MainTex, uv);
                 float alpha  = max(max(texcol.r, texcol.g), texcol.b);
                 float clipValue = UNITY_ACCESS_INSTANCED_PROP(Props, _AlphaClip); ;

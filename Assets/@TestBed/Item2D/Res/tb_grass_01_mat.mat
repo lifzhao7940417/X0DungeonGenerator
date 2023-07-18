@@ -40,7 +40,7 @@ Material:
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _MainTex:
-        m_Texture: {fileID: 2800000, guid: 673863ff7240203439a0ff0cde009faa, type: 3}
+        m_Texture: {fileID: 2800000, guid: 2dfb71c47650ffd4e996b2c79ee588ca, type: 3}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _MetallicGlossMap:
@@ -56,6 +56,7 @@ Material:
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     m_Floats:
+    - _AllCount: 9
     - _AlphaClip: 0.3
     - _BillboardSize: 1
     - _BumpScale: 1
@@ -78,9 +79,10 @@ Material:
     - _ZOffset: 0
     - _ZWrite: 1
     m_Colors:
+    - _AllCount: {r: 1, g: 1, b: 1, a: 1}
     - _BaseColor: {r: 1, g: 1, b: 1, a: 1}
     - _Color: {r: 1, g: 1, b: 1, a: 1}
     - _EmissionColor: {r: 0, g: 0, b: 0, a: 1}
-    - _TexRowColumn: {r: 3, g: 3, b: 1, a: 1}
+    - _TexRowColumn: {r: 6, g: 6, b: 1, a: 1}
     - _VertexPosOS: {r: 0, g: 3.61, b: 0, a: 0}
   m_BuildTextureStacks: []

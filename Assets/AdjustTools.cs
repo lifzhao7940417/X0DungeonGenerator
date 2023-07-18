@@ -3,11 +3,12 @@ using System.Collections.Generic;
 using UnityEngine;
 using Sirenix.OdinInspector;
 using GameWish.Game;
+using Unity.Jobs;
 
 public class AdjustTools : MonoBehaviour
 {
     public List<GameObject> ItemsList= new List<GameObject>();
-    [Range(0,10)]
+    [Range(0,30)]
     public float scale = 1;
     [Range(-10, 10)]
     public float objPosY = 0;
@@ -22,27 +23,34 @@ public class AdjustTools : MonoBehaviour
         SetRandomTex();
     }
 
-    [Button("收集草实例")]
-    public void CollectInstance()
-    {
-        for (int i = 0; i < this.transform.childCount; i++)
-        {
-            var child = this.transform.GetChild(i);
-            ItemsList.Add(child.gameObject);
-        }
-    }
+    //[Button("收集草实例")]
+    //public void CollectInstance()
+    //{
+    //    for (int i = 0; i < this.transform.childCount; i++)
+    //    {
+    //        var child = this.transform.GetChild(i);
+    //        ItemsList.Add(child.gameObject);
+    //    }
+    //}
 
     private void Adjust()
     {
         for (int i = 0; i < ItemsList.Count; i++)
         {
-            var trans = ItemsList[i].transform;
+            if (isTarget(ItemsList[i]))
+            {
+                var trans = ItemsList[i].transform;
+                //trans.localRotation = Quaternion.Euler(objRotation);
+                trans.localPosition = new Vector3(trans.localPosition.x, objPosY, trans.localPosition.z);
+                trans.localScale = Vector3.one * scale;
+            }
 
-
-            //trans.localRotation = Quaternion.Euler(objRotation);
-            trans.localPosition = new Vector3(trans.localPosition.x, objPosY, trans.localPosition.z);
-            trans.localScale = Vector3.one * scale;
         }
+    }
+
+    bool isTarget(GameObject inObj)
+    {
+        return (inObj.GetComponent<Renderer>() && inObj.GetComponent<Renderer>().sharedMaterial.HasProperty("_AllCount"));
     }
 
     [Button("贴图随机")]
@@ -50,11 +58,27 @@ public class AdjustTools : MonoBehaviour
     {
         MaterialPropertyBlock props = new MaterialPropertyBlock();
 
+        ItemsList=new List<GameObject>();
+
+        for (int i = 0; i < this.transform.childCount; i++)
+        {
+            var child = this.transform.GetChild(i);
+            ItemsList.Add(child.gameObject);
+        }
+
         for (int i = 0; i < ItemsList.Count; i++)
         {
-            int value = Random.Range(1, 10);
-            props.SetInt("_TexIndex", value);
-            ItemsList[i].GetComponent<Renderer>().SetPropertyBlock(props);
+            if (isTarget(ItemsList[i]))
+            {
+                var rendomCount = ItemsList[i].GetComponent<Renderer>().sharedMaterial.GetInt("_AllCount");
+
+                if (rendomCount > 0)
+                {
+                    int value = Random.Range(1, rendomCount + 1);
+                    props.SetInt("_TexIndex", value);
+                    ItemsList[i].GetComponent<Renderer>().SetPropertyBlock(props);
+                }
+            }
         }
     }
 
