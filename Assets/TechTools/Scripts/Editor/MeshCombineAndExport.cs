@@ -6,13 +6,14 @@ using UnityEditor;
 using System.Text;
 using System.IO;
 using System.Threading;
+using UnityEditor.Experimental.GraphView;
 
 namespace UnityFBXExporter
 {
     public class MeshCombineAndExport
     {
 #if UNITY_EDITOR
-        [MenuItem("GameObject/@WGameTools/按材质球合并模型", false, 2)]
+        [MenuItem("GameObject/@X0 GameTools/按材质球合并模型", false, 2)]
         static void Merge()
         {
             if (Selection.transforms.Length == 0)
@@ -25,8 +26,29 @@ namespace UnityFBXExporter
             }
         }
 
+        [MenuItem("GameObject/@X0 GameTools/选择模型->调整UV", false, 2)]
+        static void ExportMeshFBXWithAdjustUV()
+        {
+            if (Selection.transforms.Length == 0)
+            {
+                GUILayout.Label("选中的transform下没有问题！");
+            }
+            else
+            {
+                var selections = Selection.transforms;
+
+                for (int i = 0; i < selections.Length; i++)
+                {
+                    Transform currentRoot = selections[i];
+                    var tag = currentRoot.gameObject.GetComponent<UVEvaluation>();
+                    if (tag)
+                        tag.UVChecker();
+                }
+            }
+        }
+
         static string selectedPath;
-        [MenuItem("GameObject/@WGameTools/选择模型->生成FBX文件", false, 2)]
+        [MenuItem("GameObject/@X0 GameTools/选择模型->生成FBX文件", false, 2)]
         static void ExportMeshFBX()
         {
             if (Selection.transforms.Length == 0)
@@ -63,6 +85,8 @@ namespace UnityFBXExporter
                 }
             }
         }
+
+
 
 
 #endif

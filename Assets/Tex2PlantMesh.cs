@@ -230,14 +230,19 @@ public class PlantFenceLayer
             props.SetFloat("_ZOffset", zoffset);
             props.SetFloat("_AlphaClip", alphaClip);
 
+            var TexAllCount = fencObj[i].GetComponent<Renderer>().sharedMaterial.GetInt("_AllCount");
+
             if (fencObj[i].GetComponent<UVEvaluation>())
             {
-                fencObj[i].GetComponent<UVEvaluation>().Index = TexIndex;
+                var uve = fencObj[i].GetComponent<UVEvaluation>();
+                uve.Index = TexIndex;
+                uve.AllCount = TexAllCount;
             }
             else
             {
                 var uve = fencObj[i].AddComponent<UVEvaluation>();
                 uve.Index = TexIndex;
+                uve.AllCount = TexAllCount;
             }
 
             fencObj[i].GetComponent<Renderer>().SetPropertyBlock(props);

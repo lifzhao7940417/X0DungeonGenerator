@@ -123,6 +123,7 @@ public class RoomCreatByData : MonoBehaviour
                 if (info.prefabScale != Vector3.zero)
                     room.transform.localScale = info.prefabScale;
 
+                //²Ý
                 if (room.transform.GetComponent<FullWhiteSpace>())
                 {
                     room.transform.GetComponent<FullWhiteSpace>().parent = GrssRoot.transform;

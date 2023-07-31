@@ -4,13 +4,14 @@ using UnityEngine;
 using Sirenix.OdinInspector;
 using GameWish.Game;
 using Unity.Jobs;
+using static UnityEditor.ShaderData;
 
 public class AdjustTools : MonoBehaviour
 {
     public List<GameObject> ItemsList= new List<GameObject>();
-    [Range(0,30)]
+    [Range(0,50)]
     public float scale = 1;
-    [Range(-10, 10)]
+    [Range(-10, 20)]
     public float objPosY = 0;
 
     public void OnValidate()
@@ -77,6 +78,15 @@ public class AdjustTools : MonoBehaviour
                     int value = Random.Range(1, rendomCount + 1);
                     props.SetInt("_TexIndex", value);
                     ItemsList[i].GetComponent<Renderer>().SetPropertyBlock(props);
+
+
+                    var tag = ItemsList[i].gameObject.GetComponent<UVEvaluation>();
+
+                    if(!tag)
+                        tag = ItemsList[i].gameObject.AddComponent<UVEvaluation>();
+
+                    tag.Index = value;
+                    tag.AllCount= rendomCount;
                 }
             }
         }

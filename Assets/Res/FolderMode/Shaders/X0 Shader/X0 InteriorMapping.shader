@@ -5,25 +5,13 @@ Shader "X0/Environment/Floor/InteriorMapping"
         _Deepth("Deepth",Range(0.01,10)) = 1
         _FloorColor("FloorColor",Color) = (1,1,1,1)
         _EdgeFloorColorDeepth("EdgeFloorColorDeepth",Range(0,1)) = 0.4
-
         _CloudInWaterInstensity("CloudInWaterInstensity",Range(0,2)) = 1.4
 
-        //_GrassColor("Panel Grass Color",Color) = (0,1,0,1)
-        //_Grass2Color("Panel Grass2 Color",Color) = (0,0.5,0,1)
-        //_Grass3Color("Panel Grass3 Color",Color) = (0.5,0.5,0.5,1)
-        //_GroundColor2("Ground Depth Color",Color) = (1,1,1,1)
-        //_FloorNoiseTex("Grass Blend Map(RG)", 2D) = "white" {}
-        //_GrassDetailMapTilling("Grass TriplanarDetail Tilling",Range(0.0001,0.1)) = 0.01
-        //_GrassDetailMap("Grass TriplanarDetail Map", 2D) = "white" {}
-
-        //_InteriorTexR("InteriorTex Right", 2D) = "black" {}
-        //_InteriorTexL("InteriorTex Left", 2D) = "black" {}
-        //_InteriorTexB("InteriorTex Back",2D) = "black" {}
-        //_InteriorTexF("InteriorTex Floor",2D) = "black" {}
-        //_InteriorTexC("InteriorTex Ceiling",2D) = "black" {}
         _RoomThings("RoomThings",2D) = "black" {}
-        //_RoomThings2("RoomThings2",2D) = "black" {}
-        //_RoomThings3("RoomThings3",2D) = "black" {}
+        _inScale("RoomScale",Range(0,3)) = 1.5
+        _inPosY("RoomDeepth",Range(0,1)) = 0.15
+        _inPosX("RoomPosX",Range(-1,1)) = 0
+        _inPosZ("RoomPosZ",Range(-1,1)) = 0
 
         _WaterColor("WaterColor",Color) = (0,0,1,1)
         _WaterTransparent("WaterTransparent",Range(0,1)) = 0.5
@@ -67,6 +55,7 @@ Shader "X0/Environment/Floor/InteriorMapping"
                     float3 normal : NORMAL;
                     float4 tangent : TANGENT;
                     float4 uv : TEXCOORD0;
+                    float4 uv2:TEXCOORD1;
                 };
 
                 struct v2f
@@ -91,36 +80,24 @@ Shader "X0/Environment/Floor/InteriorMapping"
                 float _CloudInWaterInstensity, _EdgeFloorColorDeepth, _WaterTransparent;
                 float _WaterNoiseValue, _WaterNoiseSpeed;
 
+
+                half _inScale;
+                half _inPosY;
+                half _inPosX;
+                half _inPosZ;
+
                 sampler2D _WaterNoiseMap;
                 float4 _WaterNoiseMap_ST;
 
 
                 sampler2D _RoomThings;
-                uniform float4 _RoomThings_ST;
 
                 sampler2D _RoomThings3;
                 uniform float4 _RoomThings3_ST;
 
                 float4 _FloorColor, _WaterColor;
 
-                v2f vert(appdata v)
-                {
-                    v2f o;
-                    o.vertexOS = v.vertex;
 
-                    o.normalDir = UnityObjectToWorldNormal(v.normal);
-                    o.tangentDir = normalize(mul(unity_ObjectToWorld, float4(v.tangent.xyz, 0.0)).xyz);
-                    o.bitangentDir = normalize(cross(o.normalDir, o.tangentDir) * v.tangent.w);
-
-                    o.posWorld = mul(unity_ObjectToWorld, v.vertex);
-                    o.vertex = UnityObjectToClipPos(v.vertex);
-                    o.screenPos = ComputeScreenPos(o.vertex);
-
-                    o.uv.xy = v.uv.xy;
-                    o.uv.zw = v.uv.xy * _WaterNoiseMap_ST.xy + _WaterNoiseMap_ST.zw + _Time.y * _WindAllCtrl * _WaterNoiseSpeed;
-
-                    return o;
-                }
 
                 float3 GetGeometryInComing(v2f i)
                 {
@@ -351,6 +328,7 @@ Shader "X0/Environment/Floor/InteriorMapping"
 
 
 
+
                 float4 GetRoomThings(sampler2D Texture, float4 RoomThingsST ,float3 InComingTSRevert, float3 uvPart)
                 {
                     float3 DeepthOffset = GetUVOffset(InComingTSRevert, uvPart, RoomThingsST.y, uvPart.y, InComingTSRevert.y);
@@ -386,6 +364,25 @@ Shader "X0/Environment/Floor/InteriorMapping"
                 //FinallColor = lerp(FinallColor, RoomThings2.rgb, RoomThings2.a);
                 //FinallColor = lerp(FinallColor, RoomThings3.rgb, RoomThings3.a);
 
+                v2f vert(appdata v)
+                {
+                    v2f o;
+                    o.vertexOS = v.vertex;
+
+                    o.normalDir = UnityObjectToWorldNormal(v.normal);
+                    o.tangentDir = normalize(mul(unity_ObjectToWorld, float4(v.tangent.xyz, 0.0)).xyz);
+                    o.bitangentDir = normalize(cross(o.normalDir, o.tangentDir) * v.tangent.w);
+
+                    o.posWorld = mul(unity_ObjectToWorld, v.vertex);
+                    o.vertex = UnityObjectToClipPos(v.vertex);
+                    o.screenPos = ComputeScreenPos(o.vertex);
+
+                    o.uv.xy = v.uv.xy;
+                    o.uv.zw = v.uv2.xy;
+                        //v.uv.xy * _WaterNoiseMap_ST.xy + _WaterNoiseMap_ST.zw + _Time.y * _WindAllCtrl * _WaterNoiseSpeed;
+
+                    return o;
+                }
 
                 fixed4 frag(v2f i) : SV_Target
                 {
@@ -444,11 +441,13 @@ Shader "X0/Environment/Floor/InteriorMapping"
                     //向下逐渐变深色的土壤颜色
                     DeepthFloorColor = DeepthFloorColor * pow(DeepthDir, _EdgeFloorColorDeepth);
 
-                    float  WaterShadow = GetRoomThings(_RoomThings, _RoomThings_ST+float4(0,0.02,0,0), InComingTSRevert, uvPart).x;
-                    float WaterRange = GetRoomThings(_RoomThings, _RoomThings_ST, InComingTSRevert, uvPart).x;
+                    float4 RoomThingsValue= float4(_inScale, _inPosY, _inPosX, _inPosZ);
+                    float  WaterShadow = GetRoomThings(_RoomThings, RoomThingsValue +float4(0,0.02,0,0), InComingTSRevert, uvPart).x;
+                    float WaterRange = GetRoomThings(_RoomThings, RoomThingsValue, InComingTSRevert, uvPart).x;
                     float4 WaterColor = _WaterColor * WaterRange;
 
-                    float4 WaterNoise = tex2D(_WaterNoiseMap, i.uv.zw);
+                    float2 NoiseUV= i.uv.xy * _WaterNoiseMap_ST.xy + _WaterNoiseMap_ST.zw + _Time.y * _WindAllCtrl * _WaterNoiseSpeed;
+                    float4 WaterNoise = tex2D(_WaterNoiseMap, NoiseUV);
                     float WaterForm =ceil(saturate(WaterNoise.r -0.6)* saturate(WaterRange - WaterShadow-0.5));
 
                     float2 WNoiseuv = WaterNoise.rr;
@@ -462,6 +461,7 @@ Shader "X0/Environment/Floor/InteriorMapping"
 
                     float3 InteriorColor = lerp(DeepthFloorColor, WaterColor.rgb, WaterRange);
                     float3 FinallColor = lerp(float3(0, 0, 0), InteriorColor, InteriorMask);
+
 
                     return float4(FinallColor, InteriorMask);
                 }

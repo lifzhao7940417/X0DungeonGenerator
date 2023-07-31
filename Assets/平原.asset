@@ -48,7 +48,7 @@ MonoBehaviour:
       Tag: 4
       Count: 10
       Distribution: 070000000f0000000a000000190000001e000000280000000f000000070000000f000000
-      isQuad: 0
+      isQuad: 1
     - Color: {r: 0, g: 0.36666632, b: 1, a: 1}
       Tag: 4
       Count: 15

@@ -108,7 +108,7 @@ Shader "X0/Item/2D"
                     uv = GetUVOMG4(i.uv, texindex);
 
                 fixed4 col = tex2D(_MainTex, uv);
-                half Alpha = max(max(col.r, col.g), col.b);
+                half Alpha = col.a;
                 float clipValue = UNITY_ACCESS_INSTANCED_PROP(Props, _AlphaClip); ;
                 clip(Alpha - clipValue);
 

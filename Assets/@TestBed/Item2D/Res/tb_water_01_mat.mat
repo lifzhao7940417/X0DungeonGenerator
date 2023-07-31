@@ -101,7 +101,7 @@ Material:
         m_Offset: {x: 0, y: 0}
     - _RoomThings:
         m_Texture: {fileID: 2800000, guid: c3457b1dcedba1144865200b224cbd45, type: 3}
-        m_Scale: {x: 1.5, y: 0.1}
+        m_Scale: {x: 1.5, y: 0.15}
         m_Offset: {x: 0, y: 0}
     - _RoomThings2:
         m_Texture: {fileID: 2800000, guid: 9e8e8919c81e644489dfbeb5fbbc9d77, type: 3}
@@ -114,6 +114,10 @@ Material:
     - _SecondAlbedo:
         m_Texture: {fileID: 0}
         m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _WaterEdge:
+        m_Texture: {fileID: 2800000, guid: dbd7a8bb1bc5ae74ab913de700aaeb1e, type: 3}
+        m_Scale: {x: 7.16, y: 2}
         m_Offset: {x: 0, y: 0}
     - _WaterNoiseMap:
         m_Texture: {fileID: 2800000, guid: 62f9a4c8bea9ed945ba65209b434fdb7, type: 3}
@@ -128,7 +132,7 @@ Material:
     - _CloudInWaterInstensity: 1.333
     - _CloudSpeed: 0.01
     - _Cutoff: 0.5
-    - _Deepth: 9.9
+    - _Deepth: 2.42
     - _DetailBlend: 1
     - _DetailIntensity: 0
     - _DetailMapTilling: 0.01
@@ -163,6 +167,11 @@ Material:
     - _WaterOn: 1
     - _WaterTransparent: 0.65
     - _ZWrite: 1
+    - _inHigh: 0.122
+    - _inPosX: 0
+    - _inPosY: 0.07
+    - _inPosZ: 0
+    - _inScale: 1.5
     m_Colors:
     - _CloudSpeed: {r: 0.01, g: -0.005, b: 0, a: 0}
     - _Color: {r: 0.19852942, g: 0.19852942, b: 0.19852942, a: 1}

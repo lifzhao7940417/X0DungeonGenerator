@@ -4,7 +4,11 @@ Shader "X0/Item/2D/LineRender"
     {
         [HDR] _TintColor("Tint Color", Color) = (0.5,0.5,0.5,0.5)
         _AlphaClip("AlphaClip",Range(0,1))=0.5
-        _MainTex("Texture", 2D) = "white" {}
+        [NoScaleOffset]_MainTex("Texture", 2D) = "white" {}
+        _ScaleY("ScaleY",float)=1
+        _ScaleX("ScaleX",float)=1
+        _OffsetY("OffsetY",float) = 0
+        _OffsetX("OffsetX",float) = 0
         _TexIndex("TexIndex",float)=1
         _TexGroupY("TexGroup",float)=2
     }
@@ -12,6 +16,8 @@ Shader "X0/Item/2D/LineRender"
     SubShader
     {
        Tags{ "LightMode" = "ForwardBase"}
+
+       ZWrite on
 
         Pass
         {
@@ -49,11 +55,13 @@ Shader "X0/Item/2D/LineRender"
 
             UNITY_INSTANCING_BUFFER_START(Props)
                 UNITY_DEFINE_INSTANCED_PROP(int, _TexIndex)
+                UNITY_DEFINE_INSTANCED_PROP(float, _ScaleX)
             UNITY_INSTANCING_BUFFER_END(Props)
 
             float _AlphaClip;
             int _TexGroupY;
             float4 _TintColor;
+            half  _ScaleY, _OffsetY, _OffsetX;
 
             v2f vert(a2v v)
             {
@@ -62,7 +70,9 @@ Shader "X0/Item/2D/LineRender"
                 UNITY_SETUP_INSTANCE_ID(v);
                 UNITY_TRANSFER_INSTANCE_ID(v, o);
 
-                o.uv.xy = TRANSFORM_TEX(v.uv, _MainTex);
+                half ScaleX = UNITY_ACCESS_INSTANCED_PROP(Props, _ScaleX);
+
+                o.uv.xy = v.uv * half2(ScaleX, _ScaleY) + half2(_OffsetX, _OffsetY);
                 o.pos = UnityObjectToClipPos(v.vertex);
 
                 float3 worldNormal = UnityObjectToWorldNormal(v.normal);
